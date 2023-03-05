@@ -1,7 +1,7 @@
 GHDL := ghdl
 RM := rm -rf
 
-GHDLOPTS :=
+GHDLOPTS := --std=02
 
 MODULES := $(wildcard *.vhd)
 OBJECTS := $(MODULES:.vhd=.o)

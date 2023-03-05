@@ -1,7 +1,8 @@
+-- VHDL testbench to be replaced by COCOTB
+
 library ieee;
 
 entity tb_serial_sender is
-port()
 end;
 
 architecture DEF of tb_serial_sender is
@@ -10,9 +11,11 @@ architecture DEF of tb_serial_sender is
 	signal test_parity: bit;
 	signal start: bit;
 
+	signal STOP_SIMULATION: bit;
+
 	constant dt: time := 10 ns;
 begin
-	TU: entity work.serial_sender is port map (
+	TU: entity work.serial_sender port map (
 		tx => tx,
 		clk => clk,
 		reset => reset,
@@ -22,13 +25,14 @@ begin
 		start => start
 	);
 	parity <= '1';
-	test_data <= "10101010";
+	test_data <= "01010101";
 	test_parity <= '0';
 
 	TB: process
 	begin
 		reset <= '1';
 		start <= '0';
+		STOP_SIMULATION <= '0';
 		wait for dt;
 		wait for dt/2;
 		reset <= '0';
@@ -44,7 +48,7 @@ begin
 		assert idle = '0' report "Should not be idle!";
 		wait for dt;
 		for i in 0 to 7 loop
-			assert tx = data(i) report "Wrong bit send!";
+			assert tx = test_data(i) report "Wrong bit send!";
 			assert idle = '0' report "Should not be idle!";
 			wait for dt;
 		end loop;
@@ -55,14 +59,21 @@ begin
 			assert tx = '1' report "Should send stopbit!";
 		end if;
 		wait for dt;
-		assert tx = '1' report "Should send stopbi!";
+		assert tx = '1' report "Should send stopbit!";
+		wait for dt;
+		assert false report "End of simulation!";
+		STOP_SIMULATION <= '1';
+		wait;
 	end process;
 
 	CLK_GEN: process
 	begin
-		clk <= '0';
-		wait for dt/2;
 		clk <= '1';
 		wait for dt/2;
+		clk <= '0';
+		wait for dt/2;
+		if STOP_SIMULATION = '1' then
+			wait;
+		end if;
 	end process;
 end;
